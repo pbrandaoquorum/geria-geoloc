@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmação de Localização - Quorum Saúde</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+        
+        .info-box {
+            background: #f7f9fc;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+        
+        .info-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            color: #555;
+            font-size: 15px;
+        }
+        
+        .info-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .info-icon {
+            width: 28px;
+            height: 28px;
+            margin-right: 12px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .info-value {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .btn-confirm {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 18px 40px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-confirm:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        
+        .btn-confirm:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        
+        .btn-confirm:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .location-info {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+            text-align: left;
+            font-size: 14px;
+            color: #0c5460;
+            line-height: 1.6;
+        }
+        
+        .loading {
+            display: none;
+            margin-top: 20px;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            color: #666;
+            font-size: 15px;
+        }
+        
+        .message {
+            display: none;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+        
+        .message.active {
+            display: block;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .message-icon {
+            font-size: 20px;
+            margin-right: 8px;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 20px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .subtitle {
+                font-size: 14px;
+            }
+            
+            .btn-confirm {
+                font-size: 16px;
+                padding: 16px 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">📍</div>
+        <h1>Confirmação de Presença</h1>
+        <p class="subtitle">Confirme sua localização para registrar o início do turno</p>
+        
+        <div class="info-box">
+            <div class="info-item">
+                <span class="info-icon">🆔</span>
+                <span>Schedule: <span class="info-value" id="scheduleInfo">Carregando...</span></span>
+            </div>
+            <div class="info-item">
+                <span class="info-icon">📅</span>
+                <span>Data: <span class="info-value" id="dateInfo">--/--/----</span></span>
+            </div>
+            <div class="info-item">
+                <span class="info-icon">⏰</span>
+                <span>Hora: <span class="info-value" id="timeInfo">--:--</span></span>
+            </div>
+        </div>
+        
+        <button id="confirmBtn" class="btn-confirm" onclick="confirmLocation()">
+            📍 Confirmar Localização
+        </button>
+        
+        <div class="location-info">
+            ℹ️ Ao clicar, sua localização atual será registrada para confirmação de presença. É necessário permitir o acesso à localização do dispositivo.
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p class="loading-text">Obtendo localização...</p>
+        </div>
+        
+        <div class="message success-message" id="successMessage">
+            <span class="message-icon">✅</span>
+            <span>Localização confirmada com sucesso! Redirecionando...</span>
+        </div>
+        
+        <div class="message error-message" id="errorMessage">
+            <span class="message-icon">❌</span>
+            <span id="errorText">Erro ao confirmar localização. Tente novamente.</span>
+        </div>
+    </div>
+
+    <script>
+        // Configuração da API
+        const API_ENDPOINT = 'https://cqlzucjr8g.execute-api.sa-east-1.amazonaws.com/Prod/confirm-location';
+        
+        // Extrair scheduleId da URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const scheduleId = urlParams.get('scheduleId');
+        
+        // Elementos DOM
+        const confirmBtn = document.getElementById('confirmBtn');
+        const loading = document.getElementById('loading');
+        const successMsg = document.getElementById('successMessage');
+        const errorMsg = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
+        
+        // Inicialização
+        window.onload = function() {
+            // Validar scheduleId
+            if (!scheduleId) {
+                showError('Link inválido. Schedule ID não encontrado na URL.');
+                confirmBtn.disabled = true;
+                return;
+            }
+            
+            // Verificar suporte a geolocalização
+            if (!navigator.geolocation) {
+                showError('Geolocalização não suportada pelo seu navegador.');
+                confirmBtn.disabled = true;
+                return;
+            }
+            
+            // Atualizar UI com informações
+            document.getElementById('scheduleInfo').textContent = scheduleId;
+            document.getElementById('dateInfo').textContent = new Date().toLocaleDateString('pt-BR');
+            document.getElementById('timeInfo').textContent = new Date().toLocaleTimeString('pt-BR', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            
+            console.log('Página carregada. Schedule ID:', scheduleId);
+        };
+        
+        async function confirmLocation() {
+            console.log('Iniciando confirmação de localização...');
+            
+            // Reset UI
+            hideAllMessages();
+            confirmBtn.disabled = true;
+            loading.classList.add('active');
+            
+            try {
+                // Obter localização
+                console.log('Solicitando permissão de localização...');
+                const position = await getLocation();
+                
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
+                const accuracy = position.coords.accuracy;
+                const timestamp = new Date().toISOString();
+                
+                console.log('Localização obtida:', { latitude, longitude, accuracy });
+                
+                // Enviar para API
+                console.log('Enviando para API...');
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        scheduleId: scheduleId,
+                        latitude: latitude,
+                        longitude: longitude,
+                        accuracy: accuracy,
+                        timestamp: timestamp
+                    })
+                });
+                
+                console.log('Resposta da API:', response.status);
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || `Erro HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Confirmação bem-sucedida:', data);
+                
+                // Mostrar sucesso
+                loading.classList.remove('active');
+                successMsg.classList.add('active');
+                
+                // Redirecionar após 3 segundos
+                setTimeout(() => {
+                    console.log('Redirecionando para WhatsApp...');
+                    window.location.href = 'whatsapp://';
+                }, 3000);
+                
+            } catch (error) {
+                console.error('Erro na confirmação:', error);
+                loading.classList.remove('active');
+                
+                // Determinar mensagem de erro específica
+                let errorMessage = 'Erro ao confirmar localização. Tente novamente.';
+                
+                if (error.name === 'PermissionDenied') {
+                    errorMessage = 'Permissão de localização negada. Por favor, permita o acesso nas configurações do seu navegador.';
+                } else if (error.name === 'PositionUnavailable') {
+                    errorMessage = 'Não foi possível obter sua localização. Verifique se o GPS está ativado.';
+                } else if (error.name === 'Timeout') {
+                    errorMessage = 'Tempo esgotado ao obter localização. Tente novamente.';
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+                
+                showError(errorMessage);
+                confirmBtn.disabled = false;
+            }
+        }
+        
+        function getLocation() {
+            return new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(
+                    resolve,
+                    (error) => {
+                        console.error('Erro de geolocalização:', error);
+                        
+                        // Mapear códigos de erro para nomes
+                        const errorNames = {
+                            1: 'PermissionDenied',
+                            2: 'PositionUnavailable',
+                            3: 'Timeout'
+                        };
+                        
+                        const err = new Error(error.message);
+                        err.name = errorNames[error.code] || 'GeolocationError';
+                        reject(err);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            });
+        }
+        
+        function showError(message) {
+            errorText.textContent = message;
+            errorMsg.classList.add('active');
+        }
+        
+        function hideAllMessages() {
+            successMsg.classList.remove('active');
+            errorMsg.classList.remove('active');
+        }
+    </script>
+</body>
+</html>

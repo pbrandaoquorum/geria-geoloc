@@ -1,0 +1,6 @@
+name = "geria-geoloc"
+compatibility_date = "2024-10-29"
+
+[site]
+bucket = "./public"
+
