@@ -20,7 +20,7 @@ Para obter a URL real
 3. Procure no output por: `ServerlessRestApi: https://...`
 4. A URL completa será: `https://XXX.execute-api.sa-east-1.amazonaws.com/Prod/confirm-location`
 
-## Opção 1: Copiar Arquivos Manualmente
+#Opção 1: Copiar Arquivos Manualmente
 
 Se você já criou o repositório `geria-geoloc`:
 
