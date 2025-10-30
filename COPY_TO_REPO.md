@@ -14,7 +14,7 @@ Edite `public/index.html`, linha 222:
 const API_ENDPOINT = 'https://SUA_URL_REAL.execute-api.sa-east-1.amazonaws.com/Prod/confirm-location';
 ```
 
-Para obter a URL real:
+Para obter a URL real
 1. Vá para `/Users/pedro/geria/repo-whatsappMiddleware/whatsappMiddleware`
 2. Execute: `sam build && sam deploy`
 3. Procure no output por: `ServerlessRestApi: https://...`
