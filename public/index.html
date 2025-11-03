@@ -284,8 +284,8 @@
         
         <div class="info-box">
             <div class="info-item">
-                <span class="info-icon">🆔</span>
-                <span>Schedule: <span class="info-value" id="scheduleInfo">Carregando...</span></span>
+                <span class="info-icon">📋</span>
+                <span>Plantão: <span class="info-value" id="scheduleInfo">Carregando...</span></span>
             </div>
             <div class="info-item">
                 <span class="info-icon">📅</span>
@@ -322,8 +322,9 @@
     </div>
 
     <script>
-        // Configuração da API
+        // Configuração das APIs
         const API_ENDPOINT = 'https://cqlzucjr8g.execute-api.sa-east-1.amazonaws.com/Prod/confirm-location';
+        const SCHEDULE_API_ENDPOINT = 'https://f35khigesh.execute-api.sa-east-1.amazonaws.com/default/getWorkSchedule';
         
         // Extrair scheduleId da URL
         const urlParams = new URLSearchParams(window.location.search);
@@ -336,8 +337,38 @@
         const errorMsg = document.getElementById('errorMessage');
         const errorText = document.getElementById('errorText');
         
+        // Função para consultar WorkSchedules via Lambda
+        async function getWorkSchedule(scheduleId) {
+            try {
+                console.log('Consultando WorkSchedule via Lambda:', scheduleId);
+                
+                const response = await fetch(SCHEDULE_API_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        scheduleId: scheduleId
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || `Erro HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('WorkSchedule encontrado:', data);
+                return data;
+                
+            } catch (error) {
+                console.error('Erro ao consultar WorkSchedule:', error);
+                throw error;
+            }
+        }
+        
         // Inicialização
-        window.onload = function() {
+        window.onload = async function() {
             // Validar scheduleId
             if (!scheduleId) {
                 showError('Link inválido. Schedule ID não encontrado na URL.');
@@ -352,15 +383,31 @@
                 return;
             }
             
-            // Atualizar UI com informações
-            document.getElementById('scheduleInfo').textContent = scheduleId;
-            document.getElementById('dateInfo').textContent = new Date().toLocaleDateString('pt-BR');
-            document.getElementById('timeInfo').textContent = new Date().toLocaleTimeString('pt-BR', { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-            });
-            
-            console.log('Página carregada. Schedule ID:', scheduleId);
+            try {
+                // Mostrar loading enquanto carrega os dados
+                document.getElementById('scheduleInfo').textContent = 'Carregando...';
+                
+                // Buscar dados do WorkSchedule
+                const workSchedule = await getWorkSchedule(scheduleId);
+                
+                // Atualizar UI com informações do schedule
+                const scheduleInfo = `${workSchedule.day} - ${workSchedule.time}`;
+                document.getElementById('scheduleInfo').textContent = scheduleInfo;
+                
+                // Atualizar data e hora atuais
+                document.getElementById('dateInfo').textContent = new Date().toLocaleDateString('pt-BR');
+                document.getElementById('timeInfo').textContent = new Date().toLocaleTimeString('pt-BR', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+                
+                console.log('Página carregada. Schedule:', workSchedule);
+                
+            } catch (error) {
+                console.error('Erro ao carregar schedule:', error);
+                showError('Erro ao carregar informações do plantão. Verifique o link e tente novamente.');
+                confirmBtn.disabled = true;
+            }
         };
         
         async function confirmLocation() {
