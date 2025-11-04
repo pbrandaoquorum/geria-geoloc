@@ -326,9 +326,9 @@
         const API_ENDPOINT = 'https://cqlzucjr8g.execute-api.sa-east-1.amazonaws.com/Prod/confirm-location';
         const SCHEDULE_API_ENDPOINT = 'https://f35khigesh.execute-api.sa-east-1.amazonaws.com/default/getWorkSchedule';
         
-        // Extrair scheduleId da URL
+        // Extrair scheduleID da URL
         const urlParams = new URLSearchParams(window.location.search);
-        const scheduleId = urlParams.get('scheduleID');
+        const scheduleID = urlParams.get('scheduleID');
         
         // Elementos DOM
         const confirmBtn = document.getElementById('confirmBtn');
@@ -338,9 +338,9 @@
         const errorText = document.getElementById('errorText');
         
         // Função para consultar WorkSchedules via Lambda
-        async function getWorkSchedule(scheduleId) {
+        async function getWorkSchedule(scheduleID) {
             try {
-                console.log('Consultando WorkSchedule via Lambda:', scheduleId);
+                console.log('Consultando WorkSchedule via Lambda:', scheduleID);
                 
                 const response = await fetch(SCHEDULE_API_ENDPOINT, {
                     method: 'POST',
@@ -348,7 +348,7 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        scheduleId: scheduleId
+                        scheduleID: scheduleID
                     })
                 });
                 
@@ -369,8 +369,8 @@
         
         // Inicialização
         window.onload = async function() {
-            // Validar scheduleId
-            if (!scheduleId) {
+            // Validar scheduleID
+            if (!scheduleID) {
                 showError('Link inválido. Schedule ID não encontrado na URL.');
                 confirmBtn.disabled = true;
                 return;
@@ -388,7 +388,7 @@
                 document.getElementById('scheduleInfo').textContent = 'Carregando...';
                 
                 // Buscar dados do WorkSchedule
-                const workSchedule = await getWorkSchedule(scheduleId);
+                const workSchedule = await getWorkSchedule(scheduleID);
                 
                 // Atualizar UI com informações do schedule
                 const scheduleInfo = `${workSchedule.day} - ${workSchedule.time}`;
@@ -438,7 +438,7 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        scheduleId: scheduleId,
+                        scheduleID: scheduleID,
                         latitude: latitude,
                         longitude: longitude,
                         accuracy: accuracy,
