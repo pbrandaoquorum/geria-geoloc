@@ -328,7 +328,7 @@
         
         // Extrair scheduleID da URL
         const urlParams = new URLSearchParams(window.location.search);
-        const scheduleID = urlParams.get('scheduleID');
+        const scheduleId = urlParams.get('scheduleID');
         
         // Elementos DOM
         const confirmBtn = document.getElementById('confirmBtn');
@@ -338,19 +338,26 @@
         const errorText = document.getElementById('errorText');
         
         // Função para consultar WorkSchedules via Lambda
-        async function getWorkSchedule(scheduleID) {
+        async function getWorkSchedule(scheduleId) {
             try {
-                console.log('Consultando WorkSchedule via Lambda:', scheduleID);
+                console.log('Consultando WorkSchedule via Lambda:', scheduleId);
+                console.log('URL do endpoint:', SCHEDULE_API_ENDPOINT);
+                
+                const requestBody = {
+                    scheduleId: scheduleId
+                };
+                console.log('Body da requisição:', requestBody);
                 
                 const response = await fetch(SCHEDULE_API_ENDPOINT, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        scheduleID: scheduleID
-                    })
+                    body: JSON.stringify(requestBody)
                 });
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
                 
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({}));
@@ -369,8 +376,8 @@
         
         // Inicialização
         window.onload = async function() {
-            // Validar scheduleID
-            if (!scheduleID) {
+            // Validar scheduleId
+            if (!scheduleId) {
                 showError('Link inválido. Schedule ID não encontrado na URL.');
                 confirmBtn.disabled = true;
                 return;
@@ -388,7 +395,7 @@
                 document.getElementById('scheduleInfo').textContent = 'Carregando...';
                 
                 // Buscar dados do WorkSchedule
-                const workSchedule = await getWorkSchedule(scheduleID);
+                const workSchedule = await getWorkSchedule(scheduleId);
                 
                 // Atualizar UI com informações do schedule
                 const scheduleInfo = `${workSchedule.day} - ${workSchedule.time}`;
@@ -438,7 +445,7 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        scheduleID: scheduleID,
+                        scheduleId: scheduleId,
                         latitude: latitude,
                         longitude: longitude,
                         accuracy: accuracy,
