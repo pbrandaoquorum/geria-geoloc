@@ -398,7 +398,13 @@
                 const workSchedule = await getWorkSchedule(scheduleId);
                 
                 // Atualizar UI com informações do schedule
-                const scheduleInfo = `${workSchedule.day} - ${workSchedule.time}`;
+                const dayPart = workSchedule.day || '';
+                const startPart = workSchedule.start || '';
+                const finishPart = workSchedule.finish || '';
+                const timePart = startPart && finishPart
+                    ? `${startPart} - ${finishPart}`
+                    : startPart || finishPart || '';
+                const scheduleInfo = timePart ? `${dayPart} às ${timePart}` : dayPart;
                 document.getElementById('scheduleInfo').textContent = scheduleInfo;
                 
                 // Atualizar data e hora atuais
@@ -467,11 +473,12 @@
                 loading.classList.remove('active');
                 successMsg.classList.add('active');
                 
-                // Redirecionar após 3 segundos
+                // Fechar in-app browser / voltar ao WhatsApp após 2 segundos
                 setTimeout(() => {
-                    console.log('Redirecionando para WhatsApp...');
-                    window.location.href = 'whatsapp://';
-                }, 3000);
+                    window.close();
+                    // Fallback caso window.close() não funcione (ex: browser normal)
+                    setTimeout(() => { window.location.href = 'https://wa.me'; }, 500);
+                }, 2000);
                 
             } catch (error) {
                 console.error('Erro na confirmação:', error);
