@@ -461,14 +461,15 @@
                 }
 
                 loading.classList.remove('active');
-                confirmBtn.style.display = 'none';
-                locationInfo.style.display = 'none';
 
                 if (data.warning === 'distance_exceeded') {
                     warningText.textContent =
-                        `Atenção: você está a ${data.distance_meters}m do endereço do paciente. Confirmação registrada.`;
+                        `Atenção: você está a ${data.distance_meters}m do endereço do paciente. Aproxime-se e tente novamente.`;
                     warningMsg.classList.add('active');
+                    confirmBtn.disabled = false;
                 } else {
+                    confirmBtn.style.display = 'none';
+                    locationInfo.style.display = 'none';
                     successMsg.classList.add('active');
                 }
 
