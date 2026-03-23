@@ -298,6 +298,10 @@
         
         <div class="info-box">
             <div class="info-item">
+                <span class="info-icon">🏥</span>
+                <span>Cooperativa: <span class="info-value" id="cooperativeInfo">Carregando...</span></span>
+            </div>
+            <div class="info-item">
                 <span class="info-icon">📋</span>
                 <span>Plantão: <span class="info-value" id="scheduleInfo">Carregando...</span></span>
             </div>
@@ -394,6 +398,9 @@
             try {
                 document.getElementById('scheduleInfo').textContent = 'Carregando...';
                 const ws = await getWorkSchedule(scheduleId);
+
+                document.getElementById('cooperativeInfo').textContent =
+                    ws.cooperativeAlias || '—';
 
                 const dayPart = ws.day || '';
                 const startPart = ws.start || '';
