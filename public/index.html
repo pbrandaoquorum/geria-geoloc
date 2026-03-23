@@ -293,8 +293,8 @@
 <body>
     <div class="container">
         <div class="logo">📍</div>
-        <h1>Confirmação de Presença</h1>
-        <p class="subtitle">Confirme sua localização para registrar o início do turno</p>
+        <h1 id="pageTitle">Confirmação de Presença</h1>
+        <p class="subtitle" id="pageSubtitle">Confirme sua localização para registrar o início do turno</p>
         
         <div class="info-box">
             <div class="info-item">
@@ -350,14 +350,34 @@
     </div>
 
     <script>
-        // Configuração das APIs
         const API_ENDPOINT = 'https://cqlzucjr8g.execute-api.sa-east-1.amazonaws.com/Prod/confirm-location';
         const SCHEDULE_API_ENDPOINT = 'https://f35khigesh.execute-api.sa-east-1.amazonaws.com/default/getWorkSchedule';
-        
-        // Extrair scheduleID da URL
+
         const urlParams = new URLSearchParams(window.location.search);
         const scheduleId = urlParams.get('scheduleID');
-        
+        const confirmType = urlParams.get('type') === 'checkout' ? 'checkout' : 'checkin';
+        const geolocField = confirmType === 'checkin' ? 'geolocCheckin' : 'geolocCheckout';
+
+        const LABELS = {
+            checkin: {
+                title: 'Confirmação de Presença',
+                subtitle: 'Confirme sua localização para registrar o início do turno',
+                button: '📍 Confirmar Início',
+                info: 'ℹ️ Ao clicar, sua localização atual será registrada para confirmação de início de plantão. É necessário permitir o acesso à localização do dispositivo.',
+                success: 'Início de plantão confirmado com sucesso! Você pode fechar esta janela.',
+                alreadyDone: ts => `A confirmação de início de plantão já foi realizada em ${ts}.`,
+            },
+            checkout: {
+                title: 'Confirmação de Saída',
+                subtitle: 'Confirme sua localização para registrar o fim do turno',
+                button: '📍 Confirmar Saída',
+                info: 'ℹ️ Ao clicar, sua localização atual será registrada para confirmação de fim de plantão. É necessário permitir o acesso à localização do dispositivo.',
+                success: 'Fim de plantão confirmado com sucesso! Você pode fechar esta janela.',
+                alreadyDone: ts => `A confirmação de fim de plantão já foi realizada em ${ts}.`,
+            },
+        };
+        const L = LABELS[confirmType];
+
         const confirmBtn = document.getElementById('confirmBtn');
         const loading = document.getElementById('loading');
         const successMsg = document.getElementById('successMessage');
@@ -369,6 +389,12 @@
         const errorMsg = document.getElementById('errorMessage');
         const errorText = document.getElementById('errorText');
         const locationInfo = document.querySelector('.location-info');
+
+        document.getElementById('pageTitle').textContent = L.title;
+        document.getElementById('pageSubtitle').textContent = L.subtitle;
+        confirmBtn.textContent = L.button;
+        locationInfo.textContent = L.info;
+        successText.textContent = L.success;
 
         async function getWorkSchedule(id) {
             const response = await fetch(SCHEDULE_API_ENDPOINT, {
@@ -416,12 +442,17 @@
                 document.getElementById('timeInfo').textContent =
                     new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-                if (ws.geolocCheckin) {
+                if (ws[geolocField]) {
                     confirmBtn.style.display = 'none';
                     locationInfo.style.display = 'none';
-                    alreadyText.textContent =
-                        `A confirmação de geolocalização já foi realizada em ${ws.geolocCheckin}.`;
+                    alreadyText.textContent = L.alreadyDone(ws[geolocField]);
                     alreadyMsg.classList.add('active');
+                    return;
+                }
+
+                if (confirmType === 'checkout' && !ws.geolocCheckin) {
+                    confirmBtn.disabled = true;
+                    showError('É necessário confirmar o início do plantão antes de confirmar a saída.');
                     return;
                 }
             } catch (error) {
@@ -448,6 +479,7 @@
                         latitude,
                         longitude,
                         accuracy,
+                        type: confirmType,
                     }),
                 });
 
@@ -457,9 +489,15 @@
                     loading.classList.remove('active');
                     confirmBtn.style.display = 'none';
                     locationInfo.style.display = 'none';
-                    alreadyText.textContent =
-                        `A confirmação de geolocalização já foi realizada em ${data.geolocCheckin}.`;
+                    alreadyText.textContent = L.alreadyDone(data[geolocField]);
                     alreadyMsg.classList.add('active');
+                    return;
+                }
+
+                if (response.status === 400 && data.error === 'checkin_required') {
+                    loading.classList.remove('active');
+                    showError(data.message);
+                    confirmBtn.disabled = true;
                     return;
                 }
 
