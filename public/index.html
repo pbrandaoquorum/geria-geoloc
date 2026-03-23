@@ -244,11 +244,25 @@
             box-shadow: 0 2px 10px rgba(72, 187, 120, 0.1);
         }
         
+        .warning-message {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            color: #92400e;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            box-shadow: 0 2px 10px rgba(245, 158, 11, 0.1);
+        }
+        
         .error-message {
             background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
             color: #742a2a;
             border: 1px solid rgba(245, 101, 101, 0.3);
             box-shadow: 0 2px 10px rgba(245, 101, 101, 0.1);
+        }
+        
+        .already-confirmed-message {
+            background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%);
+            color: #2a4365;
+            border: 1px solid rgba(66, 153, 225, 0.3);
+            box-shadow: 0 2px 10px rgba(66, 153, 225, 0.1);
         }
         
         .message-icon {
@@ -312,7 +326,17 @@
         
         <div class="message success-message" id="successMessage">
             <span class="message-icon">✅</span>
-            <span>Localização confirmada com sucesso! Redirecionando...</span>
+            <span id="successText">Localização confirmada com sucesso! Você pode fechar esta janela.</span>
+        </div>
+        
+        <div class="message warning-message" id="warningMessage">
+            <span class="message-icon">⚠️</span>
+            <span id="warningText"></span>
+        </div>
+        
+        <div class="message already-confirmed-message" id="alreadyConfirmedMessage">
+            <span class="message-icon">ℹ️</span>
+            <span id="alreadyConfirmedText"></span>
         </div>
         
         <div class="message error-message" id="errorMessage">
@@ -330,212 +354,163 @@
         const urlParams = new URLSearchParams(window.location.search);
         const scheduleId = urlParams.get('scheduleID');
         
-        // Elementos DOM
         const confirmBtn = document.getElementById('confirmBtn');
         const loading = document.getElementById('loading');
         const successMsg = document.getElementById('successMessage');
+        const successText = document.getElementById('successText');
+        const warningMsg = document.getElementById('warningMessage');
+        const warningText = document.getElementById('warningText');
+        const alreadyMsg = document.getElementById('alreadyConfirmedMessage');
+        const alreadyText = document.getElementById('alreadyConfirmedText');
         const errorMsg = document.getElementById('errorMessage');
         const errorText = document.getElementById('errorText');
-        
-        // Função para consultar WorkSchedules via Lambda
-        async function getWorkSchedule(scheduleId) {
-            try {
-                console.log('Consultando WorkSchedule via Lambda:', scheduleId);
-                console.log('URL do endpoint:', SCHEDULE_API_ENDPOINT);
-                
-                const requestBody = {
-                    scheduleID: scheduleId
-                };
-                console.log('Body da requisição:', requestBody);
-                
-                const response = await fetch(SCHEDULE_API_ENDPOINT, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(requestBody)
-                });
-                
-                console.log('Response status:', response.status);
-                console.log('Response headers:', response.headers);
-                
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.error || `Erro HTTP ${response.status}`);
-                }
-                
-                const data = await response.json();
-                console.log('WorkSchedule encontrado:', data);
-                return data;
-                
-            } catch (error) {
-                console.error('Erro ao consultar WorkSchedule:', error);
-                throw error;
+        const locationInfo = document.querySelector('.location-info');
+
+        async function getWorkSchedule(id) {
+            const response = await fetch(SCHEDULE_API_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ scheduleID: id }),
+            });
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.error || `Erro HTTP ${response.status}`);
             }
+            return response.json();
         }
-        
-        // Inicialização
-        window.onload = async function() {
-            // Validar scheduleId
+
+        window.onload = async function () {
             if (!scheduleId) {
                 showError('Link inválido. Schedule ID não encontrado na URL.');
                 confirmBtn.disabled = true;
                 return;
             }
-            
-            // Verificar suporte a geolocalização
             if (!navigator.geolocation) {
                 showError('Geolocalização não suportada pelo seu navegador.');
                 confirmBtn.disabled = true;
                 return;
             }
-            
+
             try {
-                // Mostrar loading enquanto carrega os dados
                 document.getElementById('scheduleInfo').textContent = 'Carregando...';
-                
-                // Buscar dados do WorkSchedule
-                const workSchedule = await getWorkSchedule(scheduleId);
-                
-                // Atualizar UI com informações do schedule
-                const dayPart = workSchedule.day || '';
-                const startPart = workSchedule.start || '';
-                const finishPart = workSchedule.finish || '';
+                const ws = await getWorkSchedule(scheduleId);
+
+                const dayPart = ws.day || '';
+                const startPart = ws.start || '';
+                const finishPart = ws.finish || '';
                 const timePart = startPart && finishPart
                     ? `${startPart} - ${finishPart}`
                     : startPart || finishPart || '';
-                const scheduleInfo = timePart ? `${dayPart} às ${timePart}` : dayPart;
-                document.getElementById('scheduleInfo').textContent = scheduleInfo;
-                
-                // Atualizar data e hora atuais
-                document.getElementById('dateInfo').textContent = new Date().toLocaleDateString('pt-BR');
-                document.getElementById('timeInfo').textContent = new Date().toLocaleTimeString('pt-BR', { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                });
-                
-                console.log('Página carregada. Schedule:', workSchedule);
-                
+                document.getElementById('scheduleInfo').textContent =
+                    timePart ? `${dayPart} às ${timePart}` : dayPart;
+
+                document.getElementById('dateInfo').textContent =
+                    new Date().toLocaleDateString('pt-BR');
+                document.getElementById('timeInfo').textContent =
+                    new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+                if (ws.geolocCheckin) {
+                    confirmBtn.style.display = 'none';
+                    locationInfo.style.display = 'none';
+                    alreadyText.textContent =
+                        `A confirmação de geolocalização já foi realizada em ${ws.geolocCheckin}.`;
+                    alreadyMsg.classList.add('active');
+                    return;
+                }
             } catch (error) {
                 console.error('Erro ao carregar schedule:', error);
                 showError('Erro ao carregar informações do plantão. Verifique o link e tente novamente.');
                 confirmBtn.disabled = true;
             }
         };
-        
+
         async function confirmLocation() {
-            console.log('Iniciando confirmação de localização...');
-            
-            // Reset UI
             hideAllMessages();
             confirmBtn.disabled = true;
             loading.classList.add('active');
-            
+
             try {
-                // Obter localização
-                console.log('Solicitando permissão de localização...');
                 const position = await getLocation();
-                
-                const latitude = position.coords.latitude;
-                const longitude = position.coords.longitude;
-                const accuracy = position.coords.accuracy;
-                const timestamp = new Date().toISOString();
-                
-                console.log('Localização obtida:', { latitude, longitude, accuracy });
-                
-                // Enviar para API
-                console.log('Enviando para API...');
+                const { latitude, longitude, accuracy } = position.coords;
+
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         scheduleId: scheduleId,
-                        latitude: latitude,
-                        longitude: longitude,
-                        accuracy: accuracy,
-                        timestamp: timestamp
-                    })
+                        latitude,
+                        longitude,
+                        accuracy,
+                    }),
                 });
-                
-                console.log('Resposta da API:', response.status);
-                
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.error || `Erro HTTP ${response.status}`);
+
+                const data = await response.json().catch(() => ({}));
+
+                if (response.status === 409 && data.error === 'already_confirmed') {
+                    loading.classList.remove('active');
+                    confirmBtn.style.display = 'none';
+                    locationInfo.style.display = 'none';
+                    alreadyText.textContent =
+                        `A confirmação de geolocalização já foi realizada em ${data.geolocCheckin}.`;
+                    alreadyMsg.classList.add('active');
+                    return;
                 }
-                
-                const data = await response.json();
-                console.log('Confirmação bem-sucedida:', data);
-                
-                // Mostrar sucesso
+
+                if (!response.ok) {
+                    throw new Error(data.error || `Erro HTTP ${response.status}`);
+                }
+
                 loading.classList.remove('active');
-                successMsg.classList.add('active');
-                
-                // Fechar in-app browser / voltar ao WhatsApp após 2 segundos
-                setTimeout(() => {
-                    window.close();
-                    // Fallback caso window.close() não funcione (ex: browser normal)
-                    setTimeout(() => { window.location.href = 'https://wa.me'; }, 500);
-                }, 2000);
-                
+                confirmBtn.style.display = 'none';
+                locationInfo.style.display = 'none';
+
+                if (data.warning === 'distance_exceeded') {
+                    warningText.textContent =
+                        `Atenção: você está a ${data.distance_meters}m do endereço do paciente. Confirmação registrada.`;
+                    warningMsg.classList.add('active');
+                } else {
+                    successMsg.classList.add('active');
+                }
+
             } catch (error) {
                 console.error('Erro na confirmação:', error);
                 loading.classList.remove('active');
-                
-                // Determinar mensagem de erro específica
-                let errorMessage = 'Erro ao confirmar localização. Tente novamente.';
-                
+
+                let msg = 'Erro ao confirmar localização. Tente novamente.';
                 if (error.name === 'PermissionDenied') {
-                    errorMessage = 'Permissão de localização negada. Por favor, permita o acesso nas configurações do seu navegador.';
+                    msg = 'Permissão de localização negada. Por favor, permita o acesso nas configurações do seu navegador.';
                 } else if (error.name === 'PositionUnavailable') {
-                    errorMessage = 'Não foi possível obter sua localização. Verifique se o GPS está ativado.';
+                    msg = 'Não foi possível obter sua localização. Verifique se o GPS está ativado.';
                 } else if (error.name === 'Timeout') {
-                    errorMessage = 'Tempo esgotado ao obter localização. Tente novamente.';
+                    msg = 'Tempo esgotado ao obter localização. Tente novamente.';
                 } else if (error.message) {
-                    errorMessage = error.message;
+                    msg = error.message;
                 }
-                
-                showError(errorMessage);
+                showError(msg);
                 confirmBtn.disabled = false;
             }
         }
-        
+
         function getLocation() {
             return new Promise((resolve, reject) => {
-                navigator.geolocation.getCurrentPosition(
-                    resolve,
-                    (error) => {
-                        console.error('Erro de geolocalização:', error);
-                        
-                        // Mapear códigos de erro para nomes
-                        const errorNames = {
-                            1: 'PermissionDenied',
-                            2: 'PositionUnavailable',
-                            3: 'Timeout'
-                        };
-                        
-                        const err = new Error(error.message);
-                        err.name = errorNames[error.code] || 'GeolocationError';
-                        reject(err);
-                    },
-                    {
-                        enableHighAccuracy: true,
-                        timeout: 10000,
-                        maximumAge: 0
-                    }
-                );
+                navigator.geolocation.getCurrentPosition(resolve, (error) => {
+                    const names = { 1: 'PermissionDenied', 2: 'PositionUnavailable', 3: 'Timeout' };
+                    const err = new Error(error.message);
+                    err.name = names[error.code] || 'GeolocationError';
+                    reject(err);
+                }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
             });
         }
-        
+
         function showError(message) {
             errorText.textContent = message;
             errorMsg.classList.add('active');
         }
-        
+
         function hideAllMessages() {
             successMsg.classList.remove('active');
+            warningMsg.classList.remove('active');
+            alreadyMsg.classList.remove('active');
             errorMsg.classList.remove('active');
         }
     </script>
