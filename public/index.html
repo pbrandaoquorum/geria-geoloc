@@ -195,7 +195,7 @@
         
         .loading {
             display: none;
-            margin-top: 20px;
+            margin-bottom: 20px;
         }
         
         .loading.active {
@@ -228,7 +228,7 @@
             display: none;
             padding: 15px 20px;
             border-radius: 10px;
-            margin-top: 20px;
+            margin-bottom: 20px;
             font-size: 15px;
             line-height: 1.5;
         }
@@ -315,14 +315,6 @@
             </div>
         </div>
         
-        <button id="confirmBtn" class="btn-confirm" onclick="confirmLocation()">
-            📍 Confirmar Localização
-        </button>
-        
-        <div class="location-info">
-            ℹ️ Ao clicar, sua localização atual será registrada para confirmação de presença. É necessário permitir o acesso à localização do dispositivo.
-        </div>
-        
         <div class="loading" id="loading">
             <div class="spinner"></div>
             <p class="loading-text">Obtendo localização...</p>
@@ -346,6 +338,14 @@
         <div class="message error-message" id="errorMessage">
             <span class="message-icon">❌</span>
             <span id="errorText">Erro ao confirmar localização. Tente novamente.</span>
+        </div>
+        
+        <button id="confirmBtn" class="btn-confirm" onclick="confirmLocation()">
+            📍 Confirmar Localização
+        </button>
+        
+        <div class="location-info">
+            ℹ️ Ao clicar, sua localização atual será registrada para confirmação de presença. É necessário permitir o acesso à localização do dispositivo.
         </div>
     </div>
 
