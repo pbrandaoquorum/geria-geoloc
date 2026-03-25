@@ -193,6 +193,19 @@
             box-shadow: 0 2px 8px rgba(66, 153, 225, 0.1);
         }
         
+        .location-notice {
+            background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);
+            border-left: 4px solid #ca8a04;
+            padding: 16px 18px;
+            margin-bottom: 24px;
+            border-radius: 12px;
+            text-align: left;
+            font-size: 14px;
+            color: #713f12;
+            line-height: 1.6;
+            border: 1px solid rgba(202, 138, 4, 0.25);
+        }
+
         .loading {
             display: none;
             margin-bottom: 20px;
@@ -315,6 +328,10 @@
             </div>
         </div>
         
+        <div class="location-notice" id="locationNotice">
+            📍 Sua localização será utilizada pela cooperativa <strong id="noticeCoopName">...</strong> para registrar a presença no plantão e confirmar o serviço.
+        </div>
+
         <div class="loading" id="loading">
             <div class="spinner"></div>
             <p class="loading-text">Obtendo localização...</p>
@@ -425,8 +442,9 @@
                 document.getElementById('scheduleInfo').textContent = 'Carregando...';
                 const ws = await getWorkSchedule(scheduleId);
 
-                document.getElementById('cooperativeInfo').textContent =
-                    ws.cooperativeAlias || '—';
+                const coopAlias = ws.cooperativeAlias || '—';
+                document.getElementById('cooperativeInfo').textContent = coopAlias;
+                document.getElementById('noticeCoopName').textContent = coopAlias;
 
                 const dayPart = ws.day || '';
                 const startPart = ws.start || '';
