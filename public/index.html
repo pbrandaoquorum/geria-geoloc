@@ -562,7 +562,7 @@
                     const err = new Error(error.message);
                     err.name = names[error.code] || 'GeolocationError';
                     reject(err);
-                }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+                }, { enableHighAccuracy: true, timeout: 80000, maximumAge: 0 });
             });
         }
 
