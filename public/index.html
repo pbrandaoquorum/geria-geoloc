@@ -519,6 +519,14 @@
                     return;
                 }
 
+                if (response.status === 400 && data.error === 'address_unavailable') {
+                    loading.classList.remove('active');
+                    warningText.textContent = data.message;
+                    warningMsg.classList.add('active');
+                    confirmBtn.disabled = false;
+                    return;
+                }
+
                 if (!response.ok) {
                     throw new Error(data.error || `Erro HTTP ${response.status}`);
                 }
